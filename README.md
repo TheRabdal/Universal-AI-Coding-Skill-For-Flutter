@@ -1,14 +1,11 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/antislop-banner.png">
-    <source media="(prefers-color-scheme: light)" srcset="assets/antislop-banner-light.png">
-    <img alt="Universal AI Coding Skill For Flutter" width="100%" />
-  </picture>
+  <img src="assets/krunner-banner.svg" alt="KRunner-AI — Universal AI Coding Skill For Flutter" width="100%" />
 </p>
 
 <div align="center">
 
-# 🚀 Universal AI Coding Skill For Flutter
+# 🚀 KRunner-AI
+### Universal AI Coding Skill For Flutter
 
 **Standar AI coding presisi tinggi untuk ekosistem Flutter & Dart.**  
 Menggabungkan **Clean Architecture**, **Anti-Slop**, **Security Audit**, dan **Strict Execution Mode** ke dalam satu file standar `.krunner` yang dapat dipahami oleh AI mana pun.
@@ -21,7 +18,7 @@ npx krunner-ai
 [![Dart](https://img.shields.io/badge/Dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-20.12%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](krunner-ai/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
-[![AI Agents](https://img.shields.io/badge/Compatible-Claude%20%7C%20Gemini%20%7C%20Cursor%20%7C%20Copilot-blueviolet?style=for-the-badge)](#dukungan-agen-ai)
+[![AI Ecosystem](https://img.shields.io/badge/Multi--Platform-Cursor%20%7C%20Claude%20%7C%20Copilot%20%7C%20Gemini%20%7C%20OpenCode%20%7C%20Ollama-blueviolet?style=for-the-badge)](#-dukungan-agen--ekosistem-ai)
 
 </div>
 
@@ -37,9 +34,9 @@ npx krunner-ai
   - [3. Anti-Slop Filter](#3-anti-slop-filter)
   - [4. Security Audit Engine](#4-security-audit-engine)
   - [5. Strict Execution Mode](#5-strict-execution-mode)
-- [Perbandingan Sebelum & Sesudah (Visual)](#-perbandingan-sebelum--sesudah-visual)
+- [Perbandingan Sebelum & Sesudah](#-perbandingan-sebelum--sesudah)
 - [Struktur Proyek](#-struktur-proyek)
-- [Dukungan Agen AI](#-dukungan-agen-ai)
+- [Dukungan Agen & Ekosistem AI](#-dukungan-agen--ekosistem-ai)
 - [Lisensi](#-lisensi)
 
 ---
@@ -61,7 +58,19 @@ Seringkali AI menghasilkan kode Flutter yang:
 Anda tidak perlu menyalin puluhan aturan secara manual. Cukup jalankan perintah berikut di root folder project Flutter Anda:
 
 ```bash
+# Mode interaktif (pilih platform AI atau All-in-One)
 npx krunner-ai
+
+# Pasang otomatis untuk SEMUA platform AI sekaligus
+npx krunner-ai all
+
+# Atau pasang untuk platform spesifik pilihan Anda
+npx krunner-ai install cursor
+npx krunner-ai install claude
+npx krunner-ai install vscode
+npx krunner-ai install gemini
+npx krunner-ai install opencode
+npx krunner-ai install ollama
 ```
 
 ### Apa yang Terjadi?
@@ -172,51 +181,248 @@ AI **tidak menjalankan aplikasi/project secara lokal** dan **tidak menjalankan s
 
 ---
 
-## 🖼️ Perbandingan Sebelum & Sesudah (Visual)
+## ⚖️ Perbandingan Sebelum & Sesudah
 
-### 1. Kualitas Kode (Code Anti-Slop)
-Mencegah boilerplate berlebihan, nesting kode tak berujung, dan penulisan logic yang rapuh:
+Berikut perbedaan nyata antara kode yang biasa dihasilkan oleh AI default (*AI Slop*) dibandingkan kode setelah menerapkan standar **KRunner-AI**:
 
-<p align="center">
-  <img src="assets/compare/code/before-after.png" alt="Before and After Code" width="90%" />
-</p>
+### 1. State Management & Widget Lifecycle
+
+<table>
+<tr>
+<th width="50%">❌ Sebelum (AI Slop Default)</th>
+<th width="50%">✅ Sesudah (Standar KRunner-AI)</th>
+</tr>
+<tr>
+<td>
+
+```dart
+// Stateful & setState dilarang!
+// Logic HTTP bercampur di dalam UI
+class ProductPage extends StatefulWidget {
+  @override
+  _ProductPageState createState() => _ProductPageState();
+}
+
+class _ProductPageState extends State<ProductPage> {
+  List data = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // HTTP call langsung di initState!
+    fetchProducts();
+  }
+
+  void fetchProducts() async {
+    setState(() => isLoading = true);
+    // Hardcoded URL & tanpa error boundary
+    var res = await http.get(Uri.parse('https://api.com/items'));
+    setState(() {
+      data = jsonDecode(res.body);
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Boilerplate loading & unhandled empty state
+    return isLoading
+      ? CircularProgressIndicator()
+      : ListView.builder(
+          itemCount: data.length,
+          itemBuilder: (ctx, i) => Text(data[i]['name']),
+        );
+  }
+}
+```
+
+</td>
+<td>
+
+```dart
+// 100% StatelessWidget!
+// UI hanya membaca state & menampilkan 4 status wajib
+class ProductScreen extends StatelessWidget {
+  const ProductScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<ProductProvider>();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Produk')),
+      body: switch (state.status) {
+        ProductStatus.loading => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ProductStatus.empty => const Center(
+            child: Text('Belum ada produk tersedia.'),
+          ),
+        ProductStatus.error => Center(
+            child: Text('Error: ${state.errorMessage}'),
+          ),
+        ProductStatus.success => ListView.builder(
+            itemCount: state.products.length,
+            itemBuilder: (context, index) => ProductCard(
+              product: state.products[index],
+            ),
+          ),
+      },
+    );
+  }
+}
+```
+
+</td>
+</tr>
+<tr>
+<td>
+🔴 <b>Kelemahan:</b> Memory leak, logika bercampur di UI, tidak ada unit test, setState memicu re-render seluruh halaman.
+</td>
+<td>
+🟢 <b>Keunggulan:</b> 100% Stateless, rendering reaktif terarah, 4 status terjamin (loading, empty, error, success), testable.
+</td>
+</tr>
+</table>
 
 ---
 
-### 2. Antarmuka UI (UI Design & Direction)
-Menghilangkan tampilan UI generik khas template AI default dan menghasilkan antarmuka yang modern, proporsional, serta berkarakter:
+### 2. Arsitektur Data Flow (Clean Architecture)
 
-| ❌ Sebelum (Default AI Slop) | ✅ Sesudah (Dengan Anti-Slop Standar) |
-| :---: | :---: |
-| <img src="assets/compare/ui/without.webp" alt="UI Without Anti-slop" width="100%" /> | <img src="assets/compare/ui/w-all.webp" alt="UI With Anti-slop" width="100%" /> |
-| *Landing page generik dengan badge palsu dan elemen template membosankan.* | *Desain elegan, tipografi rapi, dan informasi yang terarah sesuai konteks.* |
+<table>
+<tr>
+<th width="50%">❌ Sebelum: Spaghetti Code</th>
+<th width="50%">✅ Sesudah: Clean Architecture Berlapis</th>
+</tr>
+<tr>
+<td>
+
+```dart
+// Widget memanggil API & parsing JSON secara liar
+ElevatedButton(
+  onPressed: () async {
+    // Hardcode token & bypass domain layer
+    final res = await http.post(
+      Uri.parse('https://api.com/pay'),
+      headers: {'Authorization': 'Bearer hardcoded_secret_token_123'},
+      body: {'amount': 50000},
+    );
+    if (res.statusCode == 200) {
+      Navigator.pushNamed(context, '/success');
+    }
+  },
+  child: Text('Bayar Sekarang'),
+)
+```
+
+</td>
+<td>
+
+```dart
+// UI hanya memicu aksi usecase via Provider/BLoC
+ElevatedButton(
+  onPressed: () {
+    // Memanggil UseCase terdaftar via Provider
+    context.read<PaymentProvider>().processPayment(
+      amount: 50000,
+    );
+  },
+  child: const Text('Bayar Sekarang'),
+)
+
+// Data Flow:
+// UI ➔ PaymentProvider ➔ ProcessPaymentUseCase
+//    ➔ PaymentRepository ➔ RemotePaymentDataSource
+```
+
+</td>
+</tr>
+<tr>
+<td>
+🔴 <b>Kelemahan:</b> Hardcoded token rawan bocor, logic pembayaran tidak bisa diuji terpisah, melanggar prinsip Single Responsibility.
+</td>
+<td>
+🟢 <b>Keunggulan:</b> Alur UI ➔ State ➔ UseCase ➔ Repository ➔ DataSource terjaga, dependensi dikelola rapi via <code>get_it</code>.
+</td>
+</tr>
+</table>
 
 ---
 
-### 3. Aksesibilitas & Human Experience
-Memastikan form, tombol, dan komponen interaktif ramah pengguna serta mematuhi standar aksesibilitas:
+### 3. Keamanan & Manajemen Kredensial
 
-<p align="center">
-  <img src="assets/compare/human/before-after.png" alt="Accessibility Before After" width="90%" />
-</p>
-
----
-
-### 4. Responsivitas Mobile & Layout
-Layout adaptif untuk ponsel dan layar lebar tanpa overflow atau elemen yang terpotong:
-
-<p align="center">
-  <img src="assets/compare/layoutmobile/before-after.png" alt="Layout Mobile Before After" width="90%" />
-</p>
+| Area Keamanan | ❌ Sebelum (AI Slop Default) | ✅ Sesudah (Standar KRunner-AI) |
+| :--- | :--- | :--- |
+| **Penyimpanan Token** | Disimpan di `SharedPreferences` biasa (file XML/Plist mentah tanpa enkripsi). | Menggunakan `FlutterSecureStorage` yang terintegrasi dengan **Android Keystore** & **iOS Keychain**. |
+| **Secret / API Keys** | Hardcoded langsung di source code (`const apiKey = "sk_live_123"`). | Diambil melalui environment variables / runtime secrets (`--dart-define`). |
+| **Network Security** | HTTP polos tanpa TLS, timeout tidak ditentukan, tanpa retry backoff. | Wajib HTTPS/TLS, Certificate Pinning untuk endpoint kritis, timeout eksplisit, sanitasi respons. |
+| **Release Build** | Build binary polos tanpa obfuscation (mudah di-reverse engineer via jadx / hopper). | Wajib mengaktifkan `--obfuscate --split-debug-info=symbols/` pada release build. |
 
 ---
 
-### 5. Komunikasi & Copywriting
-Menghindari gaya teks AI yang berlebihan (*hype*, over-promising, emoji spam) dan menggantinya dengan komunikasi lugas:
+### 4. Layout, Responsivitas & Animasi
 
-<p align="center">
-  <img src="assets/compare/copywriting/before-after.png" alt="Copywriting Before After" width="90%" />
-</p>
+<table>
+<tr>
+<th width="50%">❌ Sebelum (Rawan Bug & Boros Rebuild)</th>
+<th width="50%">✅ Sesudah (Stabil & Performa Tinggi)</th>
+</tr>
+<tr>
+<td>
+
+```dart
+// Masalah umum: Unbounded height crash
+Column(
+  children: [
+    Text('Daftar Item'),
+    // Expanded di dalam ScrollView memicu RenderFlex overflow!
+    Expanded(
+      child: ListView(...),
+    ),
+  ],
+)
+
+// AnimationController dibuat di widget tanpa dispose
+// memicu memory leak saat pindah screen
+```
+
+</td>
+<td>
+
+```dart
+// Layout terstruktur & aman dari overflow
+Column(
+  crossAxisAlignment: CrossAxisAlignment.stretch,
+  children: [
+    const Text('Daftar Item'),
+    // SizedBox atau Flexible terukur dengan constraint jelas
+    Flexible(
+      child: ListView(...),
+    ),
+  ],
+)
+
+// Animasi implisit aman (tanpa perlu manual controller)
+AnimatedContainer(
+  duration: const Duration(milliseconds: 300),
+  curve: Curves.easeInOut,
+  height: isExpanded ? 200 : 80,
+  child: child,
+)
+```
+
+</td>
+</tr>
+<tr>
+<td>
+🔴 Sering menghasilkan crash <code>RenderFlex overflowed</code>, boros rebuild memori, dan kebocoran controller.
+</td>
+<td>
+🟢 Desain adaptif bebas overflow, prioritas animasi implisit bebas leak, dan hemat baterai/memori.
+</td>
+</tr>
+</table>
 
 ---
 
@@ -241,7 +447,7 @@ Universal-AI-Coding-Skill/
 │   ├── index.mjs                    # Source code CLI
 │   ├── package.json                 # Metadata npm
 │   └── README.md                    # Dokumentasi CLI
-├── assets/                          # Banner, gambar, dan aset visual dokumentasi
+├── assets/                          # Banner resmi KRunner-AI (krunner-banner.svg)
 ├── .draft/                          # Folder draft & mentahan pribadi
 ├── installers/                      # Template adapter instalasi manual per-agent
 └── templates/                       # Boilerplate & package helper Flutter
@@ -249,18 +455,25 @@ Universal-AI-Coding-Skill/
 
 ---
 
-## 🤖 Dukungan Agen AI
+## 🤖 Dukungan Agen & Ekosistem AI
 
-Dengan mengeksekusi `npx krunner-ai`, file `.krunner` akan terbaca otomatis oleh berbagai platform dan ekstensi:
+Dengan mengeksekusi `npx krunner-ai all` (atau memilih platform yang Anda inginkan), **KRunner-AI** otomatis men-generate file konfigurasi dan adapter native untuk seluruh ekosistem AI berikut:
 
-| AI Agent | Metode Deteksi | Kompatibilitas |
+| Platform AI | File / Adapter Otomatis | Status Dukungan |
 |:---|:---|:---:|
-| **Claude Code** | Membaca `.krunner` di root project | ✅ Penuh |
-| **Cursor / Windsurf** | Membaca `.krunner` / Rule setting | ✅ Penuh |
-| **Gemini CLI (AGY)** | Membaca `.krunner` di context project | ✅ Penuh |
-| **GitHub Copilot** | Instruksi workspace `.krunner` | ✅ Penuh |
-| **OpenCode / Codex** | Membaca rule root `.krunner` | ✅ Penuh |
-| **Kimi / Cline** | Deteksi instruksi workspace | ✅ Penuh |
+| **Cursor** | `.cursorrules` | ✅ Penuh (Native) |
+| **Claude (Code & Desktop)** | `CLAUDE.md` & `.claude/skills/` | ✅ Penuh (Native) |
+| **GitHub Copilot & VS Code** | `.github/copilot-instructions.md` | ✅ Penuh (Native) |
+| **Google Antigravity & Gemini CLI** | `.gemini/skills/universal-ai-coding/` | ✅ Penuh (Native) |
+| **OpenCode** | `.opencode/skills/` & `instructions.md` | ✅ Penuh (Native) |
+| **Kiro AI** | `.kiro/rules.md` | ✅ Penuh (Native) |
+| **Ollama (Local LLM)** | `Modelfile.krunner` (Ollama Model Builder) | ✅ Penuh (Native) |
+| **9router & OmniRoute** | `.omniroute/` & `krunner-system-prompt.txt` | ✅ Penuh (Native) |
+| **Nvidia NIM & AI Workbench** | `.nvidia/prompt.md` | ✅ Penuh (Native) |
+| **CommandCode & Continue.dev** | `.continue/rules/krunner.md` | ✅ Penuh (Native) |
+| **Windsurf Cascade** | `.windsurfrules` | ✅ Penuh (Native) |
+| **Universal Codex Agent** | `.agents/skills/universal-ai-coding/` | ✅ Penuh (Native) |
+| **Universal Master** | `.krunner` (Single Source of Truth) | ✅ Penuh (Semua AI) |
 
 ---
 
