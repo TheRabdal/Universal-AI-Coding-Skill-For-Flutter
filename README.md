@@ -1,22 +1,22 @@
 <p align="center">
-  <img src="assets/krunner-banner.svg" alt="KRunner-AI — Universal AI Coding Skill For Flutter" width="100%" />
+  <img src="assets/krunner-banner.svg" alt="KRunner — Universal AI Coding Skill For Flutter" width="100%" />
 </p>
 
 <div align="center">
 
-# 🚀 KRunner-AI
+# 🚀 KRunner
 ### Universal AI Coding Skill For Flutter
 
 **Standar AI coding presisi tinggi untuk ekosistem Flutter & Dart.**  
 Menggabungkan **Clean Architecture**, **Anti-Slop**, **Security Audit**, dan **Strict Execution Mode** ke dalam satu file standar `.krunner` yang dapat dipahami oleh AI mana pun.
 
 ```bash
-npx krunner-ai
+npx krunner
 ```
 
 [![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
-[![Node.js](https://img.shields.io/badge/Node.js-20.12%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](krunner-ai/package.json)
+[![Node.js](https://img.shields.io/badge/Node.js-20.12%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](krunner/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 [![AI Ecosystem](https://img.shields.io/badge/Multi--Platform-Cursor%20%7C%20Claude%20%7C%20Copilot%20%7C%20Gemini%20%7C%20OpenCode%20%7C%20Ollama-blueviolet?style=for-the-badge)](#-dukungan-agen--ekosistem-ai)
 
@@ -58,19 +58,25 @@ Seringkali AI menghasilkan kode Flutter yang:
 Anda tidak perlu menyalin puluhan aturan secara manual. Cukup jalankan perintah berikut di root folder project Flutter Anda:
 
 ```bash
-# Mode interaktif (pilih platform AI atau All-in-One)
-npx krunner-ai
+# Mode interaktif (Welcome ➔ Pilih Bahasa ➔ Pilih Cakupan Project/Everywhere ➔ Pilih Skill ➔ Selesai)
+npx krunner
 
-# Pasang otomatis untuk SEMUA platform AI sekaligus
-npx krunner-ai all
+# Pasang otomatis untuk SEMUA platform AI di project ini
+npx krunner all
+
+# Pasang otomatis secara GLOBAL untuk SELURUH project di komputer Anda
+npx krunner all --global
+
+# Pasang dengan bahasa percakapan English
+npx krunner all --lang=en
 
 # Atau pasang untuk platform spesifik pilihan Anda
-npx krunner-ai install cursor
-npx krunner-ai install claude
-npx krunner-ai install vscode
-npx krunner-ai install gemini
-npx krunner-ai install opencode
-npx krunner-ai install ollama
+npx krunner install cursor
+npx krunner install claude
+npx krunner install vscode
+npx krunner install gemini
+npx krunner install opencode
+npx krunner install ollama
 ```
 
 ### Apa yang Terjadi?
@@ -95,8 +101,8 @@ flowchart TD
         D[additional-skills/security-audit<br/>Security Engine]
     end
 
-    subgraph CLI[" CLI krunner-ai "]
-        E["npx krunner-ai"]
+    subgraph CLI[" CLI krunner "]
+        E["npx krunner"]
     end
 
     subgraph Target[" Project Target "]
@@ -183,14 +189,14 @@ AI **tidak menjalankan aplikasi/project secara lokal** dan **tidak menjalankan s
 
 ## ⚖️ Perbandingan Sebelum & Sesudah
 
-Berikut perbedaan nyata antara kode yang biasa dihasilkan oleh AI default (*AI Slop*) dibandingkan kode setelah menerapkan standar **KRunner-AI**:
+Berikut perbedaan nyata antara kode yang biasa dihasilkan oleh AI default (*AI Slop*) dibandingkan kode setelah menerapkan standar **KRunner**:
 
 ### 1. State Management & Widget Lifecycle
 
 <table>
 <tr>
 <th width="50%">❌ Sebelum (AI Slop Default)</th>
-<th width="50%">✅ Sesudah (Standar KRunner-AI)</th>
+<th width="50%">✅ Sesudah (Standar KRunner)</th>
 </tr>
 <tr>
 <td>
@@ -352,7 +358,7 @@ ElevatedButton(
 
 ### 3. Keamanan & Manajemen Kredensial
 
-| Area Keamanan | ❌ Sebelum (AI Slop Default) | ✅ Sesudah (Standar KRunner-AI) |
+| Area Keamanan | ❌ Sebelum (AI Slop Default) | ✅ Sesudah (Standar KRunner) |
 | :--- | :--- | :--- |
 | **Penyimpanan Token** | Disimpan di `SharedPreferences` biasa (file XML/Plist mentah tanpa enkripsi). | Menggunakan `FlutterSecureStorage` yang terintegrasi dengan **Android Keystore** & **iOS Keychain**. |
 | **Secret / API Keys** | Hardcoded langsung di source code (`const apiKey = "sk_live_123"`). | Diambil melalui environment variables / runtime secrets (`--dart-define`). |
@@ -443,13 +449,12 @@ Universal-AI-Coding-Skill/
 ├── additional-skills/               # Skill pelengkap modular
 │   ├── anti-slop/                   # Aturan Anti-Slop lengkap & aset pembanding
 │   └── security-audit-skill/        # Tool & aturan security audit menyeluruh
-├── krunner-ai/                      # Zero-dependency CLI generator (.krunner)
+├── krunner/                         # Zero-dependency CLI generator (.krunner)
 │   ├── index.mjs                    # Source code CLI
 │   ├── package.json                 # Metadata npm
 │   └── README.md                    # Dokumentasi CLI
-├── assets/                          # Banner resmi KRunner-AI (krunner-banner.svg)
+├── assets/                          # Banner resmi KRunner (krunner-banner.svg)
 ├── .draft/                          # Folder draft & mentahan pribadi
-├── installers/                      # Template adapter instalasi manual per-agent
 └── templates/                       # Boilerplate & package helper Flutter
 ```
 
@@ -457,7 +462,7 @@ Universal-AI-Coding-Skill/
 
 ## 🤖 Dukungan Agen & Ekosistem AI
 
-Dengan mengeksekusi `npx krunner-ai all` (atau memilih platform yang Anda inginkan), **KRunner-AI** otomatis men-generate file konfigurasi dan adapter native untuk seluruh ekosistem AI berikut:
+Dengan mengeksekusi `npx krunner all` (atau memilih platform yang Anda inginkan), **KRunner** otomatis men-generate file konfigurasi dan adapter native untuk seluruh ekosistem AI berikut:
 
 | Platform AI | File / Adapter Otomatis | Status Dukungan |
 |:---|:---|:---:|

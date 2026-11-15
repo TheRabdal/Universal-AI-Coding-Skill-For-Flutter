@@ -82,13 +82,13 @@
     <text x="0" y="20" class="subtitle">Universal AI Coding Skill For Flutter</text>
 
     <!-- Main Title -->
-    <text x="0" y="85" class="title" fill="url(#titleGrad)">KRunner-AI</text>
+    <text x="0" y="85" class="title" fill="url(#titleGrad)">KRunner</text>
 
     <!-- CLI Badge Pill -->
-    <g transform="translate(425, 42)">
-      <rect x="0" y="0" width="220" height="42" rx="10" fill="#0A0F1D" stroke="#0284C7" stroke-width="1.5" />
+    <g transform="translate(380, 42)">
+      <rect x="0" y="0" width="190" height="42" rx="10" fill="#0A0F1D" stroke="#0284C7" stroke-width="1.5" />
       <circle cx="20" cy="21" r="5" fill="#22C55E" />
-      <text x="35" y="26" class="cli-text">npx krunner-ai</text>
+      <text x="35" y="26" class="cli-text">npx krunner</text>
     </g>
 
     <!-- Tagline description -->

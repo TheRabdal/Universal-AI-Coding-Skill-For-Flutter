@@ -1,4 +1,4 @@
-# 🚀 krunner-ai
+# 🚀 krunner
 
 > Universal CLI Installer untuk memasang standar coding AI Flutter (Clean Architecture, Anti-Slop, Security Audit) ke **semua platform & ekosistem AI coding**.
 
@@ -7,23 +7,29 @@
 Jalankan perintah berikut di folder project target Anda:
 
 ```bash
-# Mode interaktif (pilih target platform atau All-in-One)
-npx krunner-ai
+# Mode interaktif (Welcome ➔ Pilih Bahasa ➔ Pilih Cakupan Project/Everywhere ➔ Pilih Skill ➔ Selesai)
+npx krunner
 
-# Atau langsung pasang untuk SEMUA platform sekaligus
-npx krunner-ai all
+# Atau langsung pasang untuk SEMUA platform di project ini
+npx krunner all
+
+# Atau pasang secara GLOBAL untuk seluruh project di komputer Anda
+npx krunner all --global
+
+# Atau pasang dengan bahasa percakapan English
+npx krunner all --lang=en
 
 # Atau pasang untuk platform spesifik
-npx krunner-ai install cursor
-npx krunner-ai install claude
-npx krunner-ai install vscode
-npx krunner-ai install gemini
-npx krunner-ai install opencode
-npx krunner-ai install ollama
-npx krunner-ai install router
-npx krunner-ai install kiro
-npx krunner-ai install nvidia
-npx krunner-ai install commandcode
+npx krunner install cursor
+npx krunner install claude
+npx krunner install vscode
+npx krunner install gemini
+npx krunner install opencode
+npx krunner install ollama
+npx krunner install router
+npx krunner install kiro
+npx krunner install nvidia
+npx krunner install commandcode
 ```
 
 ---

@@ -1,10 +1,10 @@
 {
-  "name": "krunner-ai",
+  "name": "krunner",
   "version": "0.1.0",
   "description": "Generate satu file .krunner yang berisi semua aturan AI coding (anti-slop + security-audit + Flutter standards) — bisa dibaca oleh AI mana pun.",
   "type": "module",
   "bin": {
-    "krunner-ai": "index.mjs"
+    "krunner": "index.mjs"
   },
   "engines": {
     "node": ">=20.12.0"
