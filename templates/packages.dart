@@ -1,1 +1,1 @@
-export 'package:myProject/packages/packages.dart';
+export 'package:YOUR_PROJECT_NAME/packages/packages.dart';

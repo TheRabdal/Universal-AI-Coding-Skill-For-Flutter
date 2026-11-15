@@ -3,7 +3,7 @@ name: universal-ai-coding
 description: Aturan kerja untuk membuat, membaca, memperbaiki, mereview, mengamankan, dan melakukan refactoring kode. Terapkan aturan universal dan ikuti aturan Flutter/Dart wajib untuk project Flutter.
 ---
 
-# Universal AI Coding
+# Universal AI Coding Skill For Flutter
 
 ## Identitas dan tujuan
 
