@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/antislop-banner.png">
     <source media="(prefers-color-scheme: light)" srcset="assets/antislop-banner-light.png">
-    <img src="assets/antislop-banner.png" alt="Universal AI Coding Skill For Flutter" width="100%" />
+    <img alt="Universal AI Coding Skill For Flutter" width="100%" />
   </picture>
 </p>
 
