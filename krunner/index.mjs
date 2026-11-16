@@ -125,6 +125,25 @@ async function readAllMd(dirPath) {
   return results;
 }
 
+async function readAllLicenseFiles(dirPath) {
+  const results = [];
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of entries) {
+    if (entry.name === 'node_modules' || entry.name === '.git') continue;
+    const full = path.join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...await readAllLicenseFiles(full));
+    } else if (entry.isFile() && /^LICENSE(?:$|[._-])/i.test(entry.name)) {
+      results.push({
+        name: path.relative(CONTENT_ROOT, full),
+        content: await fs.readFile(full, 'utf-8'),
+      });
+    }
+  }
+  return results;
+}
+
 async function listAdditionalSkills() {
   const skillsDir = path.join(CONTENT_ROOT, 'additional-skills');
   let entries;
@@ -148,6 +167,7 @@ async function listAdditionalSkills() {
           id: `dir:${entry.name}`,
           label: entry.name.replace(/[-_]/g, ' '),
           files,
+          licenseFiles: await readAllLicenseFiles(fullPath),
         });
       }
     } else if (entry.isFile() && entry.name.endsWith('.md') && !IGNORE_MD.test(entry.name)) {
@@ -158,6 +178,7 @@ async function listAdditionalSkills() {
           name: path.relative(CONTENT_ROOT, fullPath),
           content: await fs.readFile(fullPath, 'utf-8'),
         }],
+        licenseFiles: [],
       });
     }
   }
@@ -265,6 +286,18 @@ ${'─'.repeat(60)}
 
 ${file.content.trim()}
 `);
+    }
+    if (skill.licenseFiles.length > 0) {
+      sections.push(`${'─'.repeat(60)}
+### LICENSE NOTICES
+${'─'.repeat(60)}
+`);
+      for (const license of skill.licenseFiles) {
+        sections.push(`#### ${license.name}
+
+${license.content.trim()}
+`);
+      }
     }
     sectionIndex++;
   }
@@ -758,9 +791,9 @@ async function selectAdapters(keys) {
     label: `${ADAPTERS[key].icon} ${ADAPTERS[key].name}`,
   }));
   return selectCheckboxItems(items, {
-    initiallySelected: keys,
+    initiallySelected: [],
     prompt: 'Pilih platform AI. File .krunner selalu dibuat.',
-    emptyInputSelection: 'all',
+    emptyInputSelection: [],
     selectionName: 'platform',
   });
 }
