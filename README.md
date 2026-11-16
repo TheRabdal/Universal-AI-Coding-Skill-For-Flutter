@@ -11,7 +11,7 @@
 Menggabungkan **Clean Architecture**, **Anti-Slop**, **Security Audit**, dan **Strict Execution Mode** ke dalam satu file standar `.krunner` yang dapat dipahami oleh AI mana pun.
 
 ```bash
-npx krunner
+krunner
 ```
 
 [![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)](https://flutter.dev)
@@ -55,36 +55,20 @@ Seringkali AI menghasilkan kode Flutter yang:
 
 ## ⚡ Cara Pakai Cepat
 
-Anda tidak perlu menyalin puluhan aturan secara manual. Cukup jalankan perintah berikut di root folder project Flutter Anda:
+Setelah KRunner tersedia di `PATH`, jalankan satu-satunya perintah CLI ini di root project Flutter Anda:
 
 ```bash
-# Mode interaktif (Welcome ➔ Pilih Bahasa ➔ Pilih Cakupan Project/Everywhere ➔ Pilih Skill ➔ Selesai)
-npx krunner
-
-# Pasang otomatis untuk SEMUA platform AI di project ini
-npx krunner all
-
-# Pasang otomatis secara GLOBAL untuk SELURUH project di komputer Anda
-npx krunner all --global
-
-# Pasang dengan bahasa percakapan English
-npx krunner all --lang=en
-
-# Atau pasang untuk platform spesifik pilihan Anda
-npx krunner install cursor
-npx krunner install claude
-npx krunner install vscode
-npx krunner install gemini
-npx krunner install opencode
-npx krunner install ollama
+krunner
 ```
 
+Wizard berjalan berurutan: **Welcome -> Bahasa -> Cakupan instalasi -> Platform AI -> Additional Skills opsional -> Loading instalasi -> Selesai**. Pilihan platform dan additional-skill menggunakan checkbox; jika tidak ada additional-skill, langkah tersebut otomatis dilewati.
+
 ### Apa yang Terjadi?
-Satu file `.krunner` akan otomatis digenerate di root project Anda. File ini berisi rangkuman lengkap:
-1. **Aturan Utama Coding & Flutter (`SKILL.md`)**
-2. **Semua Referensi Teknis (`references/`)**
-3. **Standar Anti-Slop (`additional-skills/anti-slop`)**
-4. **Pedoman Security Audit (`additional-skills/security-audit-skill`)**
+Setelah pilihan selesai, satu file `.krunner` dibuat dengan urutan sumber:
+1. **Aturan master pengguna (`.draft/rules coding by TheRabdal.md`)** — sumber utama dan otoritatif.
+2. **Aturan pendukung (`SKILL.md`)**
+3. **Semua referensi teknis (`references/`)**
+4. **Additional-skill yang dipilih (`additional-skills/`)** — satu folder skill atau file Markdown per skill; opsional, jika tidak ada langkahnya dilewati.
 
 Setelah file `.krunner` ada di project Anda, **semua AI (Claude, Gemini, Cursor, Copilot, Codex, dll.) akan otomatis mendeteksi dan tunduk pada aturan tersebut!**
 
@@ -95,14 +79,14 @@ Setelah file `.krunner` ada di project Anda, **semua AI (Claude, Gemini, Cursor,
 ```mermaid
 flowchart TD
     subgraph Core[" Sumber Daya Skill "]
-        A[SKILL.md<br/>Aturan Utama]
-        B[references/<br/>Flutter, Architecture, Refactoring]
-        C[additional-skills/anti-slop<br/>Anti Boilerplate & Clean UI]
-        D[additional-skills/security-audit<br/>Security Engine]
+        A[.draft/<br/>Aturan Master]
+        B[SKILL.md<br/>Aturan Pendukung]
+        C[references/<br/>Referensi Teknis]
+        D[additional-skills/<br/>Opsional, dipilih pengguna]
     end
 
     subgraph CLI[" CLI krunner "]
-        E["npx krunner"]
+        E["krunner"]
     end
 
     subgraph Target[" Project Target "]
@@ -120,7 +104,7 @@ flowchart TD
     A --> E
     B --> E
     C --> E
-    D --> E
+    D -.->|Opsional| E
     E -->|Bundling Bersih| F
     F -->|Dibaca & Dipatuhi| G1
     F -->|Dibaca & Dipatuhi| G2
@@ -172,6 +156,8 @@ AI dilarang menghasilkan kode yang "terlihat seperti buatan AI":
 - Tidak ada komentar untuk hal yang obvious.
 - Tidak ada nama variabel generik seperti `data1`, `temp`, `myHandler`.
 - Tidak ada fallback silent yang menyembunyikan error.
+- Jangan mengarang file, API, atau konfigurasi; tanyakan jika target tidak ada atau konteks ambigu.
+- Gunakan patch minimal dan jangan mengulang kode yang tidak berubah.
 - UI tidak boleh generik dengan layout membosankan.
 
 ### 4. Security Audit Engine
@@ -182,7 +168,8 @@ AI dilarang menghasilkan kode yang "terlihat seperti buatan AI":
 
 ### 5. Strict Execution Mode
 AI **tidak menjalankan aplikasi/project secara lokal** dan **tidak menjalankan server atau build lokal**. 
-- AI hanya melakukan inspeksi statis, formatting, dan review file secara *read-only*.
+- AI melakukan inspeksi statis dan review; pemeriksaan format/analyze dapat dilakukan sesuai tooling project.
+- AI tidak menjalankan test; test dijalankan manual oleh pemilik project dan melalui pipeline CI/CD.
 - Build, compile, dan end-to-end quality gate sepenuhnya diserahkan kepada **CI/CD Pipeline**.
 
 ---
@@ -436,7 +423,9 @@ AnimatedContainer(
 
 ```text
 Universal-AI-Coding-Skill/
-├── SKILL.md                         # Aturan kanonis utama Universal AI Coding
+├── .draft/
+│   └── rules coding by TheRabdal.md # Aturan master; sumber utama semua aturan
+├── SKILL.md                         # Aturan pendukung Universal AI Coding
 ├── references/                      # Modul referensi teknis spesifik
 │   ├── flutter-standards.md         # Aturan wajib Flutter & Dart
 │   ├── architecture.md              # Clean Architecture (Presentation, Domain, Data)
@@ -446,23 +435,20 @@ Universal-AI-Coding-Skill/
 │   ├── security-audit.md            # Standar audit keamanan kode
 │   ├── strict-execution.md          # Ketentuan Strict Execution Mode
 │   └── anti-slop.md                 # Ringkasan filter anti-slop
-├── additional-skills/               # Skill pelengkap modular
-│   ├── anti-slop/                   # Aturan Anti-Slop lengkap & aset pembanding
-│   └── security-audit-skill/        # Tool & aturan security audit menyeluruh
 ├── krunner/                         # Zero-dependency CLI generator (.krunner)
 │   ├── index.mjs                    # Source code CLI
 │   ├── package.json                 # Metadata npm
-│   └── README.md                    # Dokumentasi CLI
+│   └── prepare-package.mjs          # Menyiapkan sumber aturan saat npm pack
+├── additional-skills/               # Skill tambahan opsional (jika tersedia)
 ├── assets/                          # Banner resmi KRunner (krunner-banner.svg)
-├── .draft/                          # Folder draft & mentahan pribadi
-└── templates/                       # Boilerplate & package helper Flutter
+└── VERSION                          # Sumber versi tunggal
 ```
 
 ---
 
 ## 🤖 Dukungan Agen & Ekosistem AI
 
-Dengan mengeksekusi `npx krunner all` (atau memilih platform yang Anda inginkan), **KRunner** otomatis men-generate file konfigurasi dan adapter native untuk seluruh ekosistem AI berikut:
+Dengan menjalankan `krunner` dan memilih platform yang Anda inginkan, **KRunner** otomatis men-generate file konfigurasi dan adapter native untuk ekosistem AI berikut:
 
 | Platform AI | File / Adapter Otomatis | Status Dukungan |
 |:---|:---|:---:|

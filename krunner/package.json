@@ -1,6 +1,6 @@
 {
   "name": "krunner",
-  "version": "0.1.0",
+  "version": "0.0.20",
   "description": "Generate satu file .krunner yang berisi semua aturan AI coding (anti-slop + security-audit + Flutter standards) — bisa dibaca oleh AI mana pun.",
   "type": "module",
   "bin": {
@@ -11,11 +11,13 @@
   },
   "files": [
     "index.mjs",
-    "README.md"
+    "prepare-package.mjs",
+    "resources"
   ],
   "scripts": {
     "test": "node index.mjs --help",
-    "sync-version": "node -e \"import('fs').then(fs => { const v = fs.readFileSync('../VERSION', 'utf-8').trim().replace(/^v/i,''); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8')); pkg.version = v; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n'); console.log('Synced version to ' + v); });\""
+    "prepack": "node prepare-package.mjs",
+    "postpack": "node prepare-package.mjs --clean"
   },
   "keywords": [
     "ai-coding",

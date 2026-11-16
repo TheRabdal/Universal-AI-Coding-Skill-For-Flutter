@@ -7,17 +7,18 @@
  * 1. Welcome (Tulisan Selamat Datang)
  * 2. Pilih Bahasa Percakapan untuk Agent (Bahasa Indonesia / English)
  * 3. Pilih Cakupan Penginstalan (Only this project / Everywhere Global)
- * 4. Pilih Skill AI mana yang mau di-install
- * 5. Loading Animasi Instalasi
- * 6. Tampilan Sudah Selesai Diinstal
+ * 4. Pilih platform AI yang mau di-install
+ * 5. Pilih additional-skills opsional
+ * 6. Loading animasi instalasi
+ * 7. Tampilan instalasi selesai
  *
  * Zero dependency. Node >= 20.12.0.
  */
 
-import { promises as fs, readFileSync } from 'fs';
+import { promises as fs, existsSync, readFileSync } from 'fs';
 import os from 'os';
 import path from 'path';
-import { createInterface } from 'readline';
+import { createInterface, emitKeypressEvents } from 'readline';
 import { fileURLToPath } from 'url';
 
 // ── Paths ───────────────────────────────────────────────────────
@@ -25,15 +26,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const REPO_ROOT  = path.resolve(__dirname, '..');
 const HOME_DIR   = os.homedir();
+const PACKAGE_DATA_ROOT = path.join(__dirname, 'resources');
+const CONTENT_ROOT = existsSync(path.join(REPO_ROOT, '.draft', 'rules coding by TheRabdal.md'))
+  ? REPO_ROOT
+  : PACKAGE_DATA_ROOT;
+const DRAFT_ROOT = CONTENT_ROOT === REPO_ROOT ? '.draft' : 'draft';
 
-// ── Version (Dipusatkan di file /VERSION) ────────────────────────
 function loadVersion() {
   try {
-    const raw = readFileSync(path.join(REPO_ROOT, 'VERSION'), 'utf-8');
-    return raw.trim().replace(/^v/i, '');
-  } catch {
-    return '0.1.0';
+    const version = readFileSync(path.join(CONTENT_ROOT, 'VERSION'), 'utf-8')
+      .trim()
+      .replace(/^v/i, '');
+    if (version) return version;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
   }
+
+  const packageJson = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf-8'));
+  const packageVersion = packageJson.version;
+  if (packageVersion && !packageVersion.startsWith('$')) return packageVersion;
+  throw new Error('Versi KRunner tidak ditemukan di VERSION atau package.json.');
 }
 
 const VERSION = loadVersion();
@@ -46,21 +58,27 @@ const fmt = {
   dim:    (t) => `\x1b[2m${t}\x1b[0m`,
   red:    (t) => `\x1b[31m${t}\x1b[0m`,
   yellow: (t) => `\x1b[33m${t}\x1b[0m`,
-  magenta:(t) => `\x1b[35m${t}\x1b[0m`,
 };
 
 // ── 1. TULISAN SELAMAT DATANG ───────────────────────────────────
+function printBoxed(text, color) {
+  const width = Math.max(54, text.length);
+  const padding = width - text.length;
+  const left = Math.floor(padding / 2);
+  const border = `+${'-'.repeat(width)}+`;
+  const content = `${' '.repeat(left)}${text}${' '.repeat(padding - left)}`;
+
+  console.log(color(`  ${border}`));
+  console.log(color(`  |${content}|`));
+  console.log(color(`  ${border}`));
+}
+
 function showWelcome() {
-  const verBadge = `v${VERSION}`.padEnd(8, ' ');
   console.log('');
-  console.log(fmt.bold(fmt.cyan('  ╔═══════════════════════════════════════════════════════════════╗')));
-  console.log(fmt.bold(fmt.cyan(`  ║                     🚀  KRunner  ${verBadge}                    ║`)));
-  console.log(fmt.bold(fmt.cyan('  ║           Universal AI Coding Skill For Flutter               ║')));
-  console.log(fmt.bold(fmt.cyan('  ╚═══════════════════════════════════════════════════════════════╝')));
+  printBoxed(`KRunner v${VERSION}`, (text) => fmt.bold(fmt.cyan(text)));
   console.log('');
-  console.log(`  ${fmt.bold('Selamat datang di KRunner!')}`);
-  console.log(`  ${fmt.dim('Standar AI coding presisi tinggi untuk ekosistem Flutter & Dart.')}`);
-  console.log(`  ${fmt.dim('100% Stateless • Clean Architecture • Anti-Slop • Security Audited')}`);
+  console.log(`  ${fmt.bold('Universal AI Coding Skill for Flutter')}`);
+  console.log(`  ${fmt.dim('Clean code | Anti-slop | Security | Strict execution')}`);
   console.log('');
 }
 
@@ -70,7 +88,7 @@ function sleep(ms) {
 }
 
 async function showLoadingStep(text, durationMs = 380) {
-  const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  const frames = ['|', '/', '-', '\\'];
   let i = 0;
   const start = Date.now();
   return new Promise((resolve) => {
@@ -79,7 +97,7 @@ async function showLoadingStep(text, durationMs = 380) {
       process.stdout.write(`\r  ${fmt.cyan(frame)} ${text}...`);
       if (Date.now() - start >= durationMs) {
         clearInterval(timer);
-        process.stdout.write(`\r  ${fmt.green('✓')} ${text} ${fmt.dim('selesai')}\n`);
+        process.stdout.write(`\r  ${fmt.green('[OK]')} ${text}\n`);
         resolve();
       }
     }, 60);
@@ -87,24 +105,11 @@ async function showLoadingStep(text, durationMs = 380) {
 }
 
 // ── File & Directory Utilities ──────────────────────────────────
-async function readSafe(filePath) {
-  try {
-    return await fs.readFile(filePath, 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
 const IGNORE_MD = /^(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|ROADMAP|PULL_REQUEST_TEMPLATE|LICENSE)\.md$/i;
 
 async function readAllMd(dirPath) {
   const results = [];
-  let entries;
-  try {
-    entries = await fs.readdir(dirPath, { withFileTypes: true });
-  } catch {
-    return results;
-  }
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
   entries.sort((a, b) => a.name.localeCompare(b.name));
   for (const entry of entries) {
     if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
@@ -113,17 +118,54 @@ async function readAllMd(dirPath) {
       results.push(...await readAllMd(full));
     } else if (entry.isFile() && entry.name.endsWith('.md')) {
       if (IGNORE_MD.test(entry.name)) continue;
-      const content = await readSafe(full);
-      if (content) {
-        results.push({ name: path.relative(REPO_ROOT, full), content });
-      }
+      const content = await fs.readFile(full, 'utf-8');
+      results.push({ name: path.relative(CONTENT_ROOT, full), content });
     }
   }
   return results;
 }
 
+async function listAdditionalSkills() {
+  const skillsDir = path.join(CONTENT_ROOT, 'additional-skills');
+  let entries;
+  try {
+    entries = await fs.readdir(skillsDir, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+  const skills = [];
+  for (const entry of entries) {
+    if (entry.name.startsWith('.')) continue;
+    const fullPath = path.join(skillsDir, entry.name);
+
+    if (entry.isDirectory()) {
+      const files = await readAllMd(fullPath);
+      if (files.length > 0) {
+        skills.push({
+          id: `dir:${entry.name}`,
+          label: entry.name.replace(/[-_]/g, ' '),
+          files,
+        });
+      }
+    } else if (entry.isFile() && entry.name.endsWith('.md') && !IGNORE_MD.test(entry.name)) {
+      skills.push({
+        id: `file:${entry.name}`,
+        label: entry.name.replace(/\.md$/i, '').replace(/[-_]/g, ' '),
+        files: [{
+          name: path.relative(CONTENT_ROOT, fullPath),
+          content: await fs.readFile(fullPath, 'utf-8'),
+        }],
+      });
+    }
+  }
+  return skills;
+}
+
 // ── Build Master Content with Language Directive ────────────────
-async function buildKrunner(lang = 'id', scope = 'project') {
+async function buildKrunner(lang = 'id', scope = 'project', additionalSkills = []) {
   const sections = [];
   const isEn = lang === 'en';
 
@@ -166,29 +208,38 @@ async function buildKrunner(lang = 'id', scope = 'project') {
 ${langDirective}
 `);
 
-  // Section 1: SKILL.md
-  let skillMd = await readSafe(path.join(REPO_ROOT, 'SKILL.md'));
-  if (skillMd) {
-    if (isEn) {
-      skillMd = skillMd.replace(
-        /## Bahasa[\s\S]*?(?=## Aturan universal)/i,
-        `## Language\n\n- Use English for conversations, explanations, and final reports.\n- Keep technical terms, APIs, keywords, package names, and identifiers standard.\n- Avoid verbose explanations.\n\n`
-      );
-    }
-    sections.push(`${'='.repeat(80)}
-## BAGIAN 1: ATURAN UTAMA (SKILL.md)
+  const masterRules = await fs.readFile(
+    path.join(CONTENT_ROOT, DRAFT_ROOT, 'rules coding by TheRabdal.md'),
+    'utf-8',
+  );
+  sections.push(`${'='.repeat(80)}
+## BAGIAN 1: ATURAN MASTER (.draft)
+${'='.repeat(80)}
+
+${masterRules.trim()}
+`);
+
+  // Section 2: SKILL.md
+  let skillMd = await fs.readFile(path.join(CONTENT_ROOT, 'SKILL.md'), 'utf-8');
+  if (isEn) {
+    skillMd = skillMd.replace(
+      /## Bahasa[\s\S]*?(?=## Aturan universal)/i,
+      `## Language\n\n- Use English for conversations, explanations, and final reports.\n- Keep technical terms, APIs, keywords, package names, and identifiers standard.\n- Avoid verbose explanations.\n\n`
+    );
+  }
+  sections.push(`${'='.repeat(80)}
+## BAGIAN 2: ATURAN PENDUKUNG (SKILL.md)
 ${'='.repeat(80)}
 
 ${skillMd.trim()}
 `);
-  }
 
-  // Section 2: References
-  const refsDir = path.join(REPO_ROOT, 'references');
+  // Section 3: References
+  const refsDir = path.join(CONTENT_ROOT, 'references');
   const refs = await readAllMd(refsDir);
   if (refs.length) {
     sections.push(`${'='.repeat(80)}
-## BAGIAN 2: REFERENCES
+## BAGIAN 3: REFERENCES
 ${'='.repeat(80)}
 `);
     for (const ref of refs) {
@@ -201,52 +252,21 @@ ${ref.content.trim()}
     }
   }
 
-  // Section 3+: Dynamic Additional Skills
-  const addSkillsDir = path.join(REPO_ROOT, 'additional-skills');
-  let addSkillEntries = [];
-  try {
-    addSkillEntries = await fs.readdir(addSkillsDir, { withFileTypes: true });
-  } catch {}
-
-  addSkillEntries.sort((a, b) => a.name.localeCompare(b.name));
-
-  let sectionIndex = 3;
-  for (const entry of addSkillEntries) {
-    if (entry.name.startsWith('.')) continue;
-    const fullPath = path.join(addSkillsDir, entry.name);
-
-    if (entry.isDirectory()) {
-      const files = await readAllMd(fullPath);
-      if (files.length > 0) {
-        const title = entry.name.replace(/[-_]/g, ' ').toUpperCase();
-        sections.push(`${'='.repeat(80)}
-## BAGIAN ${sectionIndex}: ADDITIONAL SKILL — ${title}
+  let sectionIndex = 4;
+  for (const skill of additionalSkills) {
+    sections.push(`${'='.repeat(80)}
+## BAGIAN ${sectionIndex}: ADDITIONAL SKILL — ${skill.label.toUpperCase()}
 ${'='.repeat(80)}
 `);
-        for (const file of files) {
-          sections.push(`${'─'.repeat(60)}
+    for (const file of skill.files) {
+      sections.push(`${'─'.repeat(60)}
 ### ${file.name}
 ${'─'.repeat(60)}
 
 ${file.content.trim()}
 `);
-        }
-        sectionIndex++;
-      }
-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
-      if (IGNORE_MD.test(entry.name)) continue;
-      const content = await readSafe(fullPath);
-      if (content) {
-        const title = entry.name.replace(/\.md$/i, '').replace(/[-_]/g, ' ').toUpperCase();
-        sections.push(`${'='.repeat(80)}
-## BAGIAN ${sectionIndex}: ADDITIONAL SKILL — ${title}
-${'='.repeat(80)}
-
-${content.trim()}
-`);
-        sectionIndex++;
-      }
     }
+    sectionIndex++;
   }
 
   // Footer
@@ -255,9 +275,11 @@ ${content.trim()}
 ##
 ## AI yang bekerja pada project ini WAJIB mematuhi seluruh aturan di atas.
 ## Jika ada konflik antar bagian, gunakan urutan prioritas:
-##   1. Instruksi eksplisit terbaru dari pengguna & Bahasa percakapan pilihan (${isEn ? 'English' : 'Bahasa Indonesia'})
-##   2. SKILL.md (Bagian 1)
-##   3. References & Additional Skills (Bagian 2 dst.)
+##   1. Instruksi eksplisit terbaru dari pengguna & kebijakan platform
+##   2. Aturan master .draft (Bagian 1)
+##   3. SKILL.md (Bagian 2)
+##   4. References (Bagian 3)
+##   5. Additional Skills terpilih (Bagian 4 dst.); tidak boleh melemahkan aturan sebelumnya
 ${'='.repeat(80)}
 `);
 
@@ -268,7 +290,7 @@ ${'='.repeat(80)}
 const ADAPTERS = {
   cursor: {
     id: 'cursor',
-    icon: '🖱️ ',
+    icon: '[CUR]',
     name: 'Cursor (.cursorrules)',
     desc: 'Aturan otomatis untuk Cursor AI IDE',
     async install(targetRoot, content, lang, scope) {
@@ -285,11 +307,11 @@ ${langNote}
 
 Aturan Pokok:
 1. 100% StatelessWidget (StatefulWidget & setState DILARANG TOTAL).
-2. State Management via Provider atau BLoC. Jangan campur dalam satu domain.
+2. State Management: Provider untuk tugas/state ringan, BLoC untuk enterprise. Jangan campur dalam satu domain.
 3. Clean Architecture: UI -> State -> UseCase -> Repository -> DataSource.
 4. Anti-Slop: Tidak ada kode/UI generik, tidak ada komentar obvious.
 5. Keamanan: Zero hardcoded secrets, gunakan flutter_secure_storage.
-6. Strict Execution: Jangan jalankan project/build secara lokal.
+6. Strict Execution: Jangan jalankan project, test, server, atau build; test dijalankan manual oleh pemilik project.
 
 Aturan lengkap dan referensi teknis tersedia di: .krunner
 `;
@@ -300,7 +322,7 @@ Aturan lengkap dan referensi teknis tersedia di: .krunner
   },
   claude: {
     id: 'claude',
-    icon: '🤖',
+    icon: '[CLA]',
     name: 'Claude (CLAUDE.md & .claude/skills/)',
     desc: 'Aturan kerja untuk Claude Code terminal & desktop',
     async install(targetRoot, content, lang, scope) {
@@ -318,10 +340,10 @@ Anda WAJIB mematuhi seluruh aturan coding Flutter di file .krunner.
 Ringkasan Aturan:
 ${langNote}
 - Semua widget wajib StatelessWidget (StatefulWidget & setState dilarang total).
-- State, lifecycle, dan business logic di Provider / BLoC.
+- Provider untuk tugas/state ringan, BLoC untuk enterprise; lifecycle dan business logic dikelola di state layer.
 - Clean Architecture berlapis wajib dipatuhi: UI -> State -> UseCase -> Repository -> DataSource.
 - Anti-slop aktif: Kode bersih, tanpa boilerplate berlebih, desain UI terarah.
-- Strict Execution Mode: Jangan menjalankan aplikasi/build lokal.
+- Strict Execution Mode: Jangan menjalankan aplikasi, test, server, atau build; test dijalankan manual oleh pemilik project.
 
 Baca file .krunner untuk detail aturan lengkap dan pedoman security audit.
 `;
@@ -337,7 +359,7 @@ Baca file .krunner untuk detail aturan lengkap dan pedoman security audit.
   },
   vscode: {
     id: 'vscode',
-    icon: '💻',
+    icon: '[VSC]',
     name: 'GitHub Copilot & VS Code (.github/copilot-instructions.md)',
     desc: 'Workspace instructions resmi untuk GitHub Copilot',
     async install(targetRoot, content, lang, scope) {
@@ -361,6 +383,7 @@ ${langNote}
 - State Provider (tugas) atau BLoC (enterprise).
 - Clean Architecture: Presentation -> Domain -> Data.
 - Dilarang hardcode secret / API key.
+- Jangan menjalankan test; test dijalankan manual oleh pemilik project.
 - Rujukan lengkap dapat dibaca di: .krunner
 `;
       const file = path.join(copilotDir, 'copilot-instructions.md');
@@ -370,7 +393,7 @@ ${langNote}
   },
   gemini: {
     id: 'gemini',
-    icon: '🪐',
+    icon: '[GEM]',
     name: 'Google Antigravity & Gemini CLI (.gemini/skills/)',
     desc: 'Skill resmi untuk Antigravity IDE & Gemini CLI',
     async install(targetRoot, content) {
@@ -383,7 +406,7 @@ ${langNote}
   },
   opencode: {
     id: 'opencode',
-    icon: '🔓',
+    icon: '[OPC]',
     name: 'OpenCode (.opencode/skills/ & instructions.md)',
     desc: 'Skill & instruksi native untuk OpenCode Agent',
     async install(targetRoot, content) {
@@ -409,7 +432,7 @@ ${langNote}
   },
   kiro: {
     id: 'kiro',
-    icon: '🎯',
+    icon: '[KIR]',
     name: 'Kiro AI (.kiro/rules.md)',
     desc: 'Aturan kerja untuk Kiro coding agent',
     async install(targetRoot, content) {
@@ -422,7 +445,7 @@ ${langNote}
   },
   ollama: {
     id: 'ollama',
-    icon: '🦙',
+    icon: '[OLL]',
     name: 'Ollama (Modelfile.krunner)',
     desc: 'Modelfile siap pakai untuk local LLM (ollama create)',
     async install(targetRoot, content) {
@@ -448,7 +471,7 @@ ${escaped}
   },
   router: {
     id: 'router',
-    icon: '🔀',
+    icon: '[RTE]',
     name: '9router & OmniRoute (System Prompt Gateway)',
     desc: 'Prompt sistem untuk multi-model routing gateway',
     async install(targetRoot, content) {
@@ -464,7 +487,7 @@ ${escaped}
   },
   nvidia: {
     id: 'nvidia',
-    icon: '🟢',
+    icon: '[NVD]',
     name: 'Nvidia NIM & AI Workbench (.nvidia/prompt.md)',
     desc: 'System prompt untuk Nvidia NIM & NeMo Guardrails',
     async install(targetRoot, content) {
@@ -477,7 +500,7 @@ ${escaped}
   },
   commandcode: {
     id: 'commandcode',
-    icon: '⚡',
+    icon: '[CNT]',
     name: 'CommandCode & Continue.dev (.continue/rules/)',
     desc: 'Aturan kerja untuk CommandCode & Continue extension',
     async install(targetRoot, content) {
@@ -490,7 +513,7 @@ ${escaped}
   },
   windsurf: {
     id: 'windsurf',
-    icon: '🌊',
+    icon: '[WIN]',
     name: 'Windsurf Cascade (.windsurfrules)',
     desc: 'Aturan kerja untuk Windsurf IDE',
     async install(targetRoot, content, lang, scope) {
@@ -505,10 +528,11 @@ Cascade Agent WAJIB mematuhi seluruh aturan di file .krunner.
 
 ${langNote}
 - 100% StatelessWidget (StatefulWidget & setState dilarang).
-- State via Provider / BLoC.
+- Provider untuk tugas/state ringan, BLoC untuk enterprise.
 - Clean Architecture berlapis: UI -> State -> UseCase -> Repository -> DataSource.
 - Anti-slop aktif: Kode bersih, tanpa komentar obvious.
 - Zero hardcoded secrets.
+- Jangan menjalankan test; test dijalankan manual oleh pemilik project.
 
 Aturan lengkap: .krunner
 `;
@@ -519,54 +543,61 @@ Aturan lengkap: .krunner
   },
   universal: {
     id: 'universal',
-    icon: '📄',
+    icon: '[ALL]',
     name: 'Universal Master (.krunner saja)',
     desc: 'Master single-file bundle untuk semua AI',
-    async install(targetRoot, content) {
-      const file = path.join(targetRoot, '.krunner');
-      await fs.writeFile(file, content, 'utf-8');
-      return [file];
-    }
   }
 };
 
 // ── 5. PROSES LOADING & SELESAI DIINSTAL ─────────────────────────
-async function runInstallation(scope, targetKeys, lang = 'id', projectDir = process.cwd()) {
+async function runInstallation(
+  scope,
+  targetKeys,
+  lang = 'id',
+  projectDir = process.cwd(),
+  additionalSkills = [],
+) {
   const isGlobal = scope === 'global';
   const targetRoot = isGlobal ? HOME_DIR : projectDir;
   const isEn = lang === 'en';
-  const langLabel = isEn ? 'English 🇬🇧' : 'Bahasa Indonesia 🇮🇩';
+  const langLabel = isEn ? 'English' : 'Bahasa Indonesia';
+  const adapterKeys = targetKeys.filter((key) => key !== 'universal');
   const scopeLabel = isGlobal
-    ? '🌍 Everywhere / Global (Seluruh Project di Komputer)'
-    : '📁 Only This Project (Hanya di Project Ini)';
+    ? 'Global (semua project)'
+    : 'Project ini';
 
   console.log('');
-  console.log(fmt.bold('⚙️  Memulai proses instalasi KRunner...'));
-  console.log(`   ${fmt.dim('Cakupan Instalasi:')} ${fmt.cyan(fmt.bold(scopeLabel))}`);
-  console.log(`   ${fmt.dim('Target Direktori :')} ${fmt.cyan(targetRoot)}`);
-  console.log(`   ${fmt.dim('Bahasa Agent AI  :')} ${fmt.cyan(fmt.bold(langLabel))}`);
+  console.log(fmt.bold('Instalasi KRunner'));
+  console.log(`  ${fmt.dim('Cakupan    :')} ${fmt.cyan(fmt.bold(scopeLabel))}`);
+  console.log(`  ${fmt.dim('Folder     :')} ${fmt.cyan(targetRoot)}`);
+  console.log(`  ${fmt.dim('Bahasa AI  :')} ${fmt.cyan(fmt.bold(langLabel))}`);
+  console.log(`  ${fmt.dim('Additional skills:')} ${additionalSkills.length} dipilih`);
   console.log('');
 
   // ── Tahap Loading 1 ──
-  await showLoadingStep(`Mengonfigurasi cakupan instalasi (${isGlobal ? 'Global' : 'Project'})`, 300);
+  await showLoadingStep(`Mengatur cakupan instalasi (${isGlobal ? 'Global' : 'Project'})`, 300);
 
   // ── Tahap Loading 2 ──
-  await showLoadingStep(`Menerapkan direktif bahasa (${langLabel})`, 350);
+  await showLoadingStep(`Mengatur bahasa AI (${langLabel})`, 350);
 
   // ── Tahap Loading 3 ──
-  await showLoadingStep('Menyiapkan aturan inti Flutter & Dart (SKILL.md)', 350);
+  await showLoadingStep('Memuat aturan inti Flutter dan Dart', 350);
 
   // ── Tahap Loading 4 ──
-  await showLoadingStep('Memuat modul referensi (Clean Architecture, Testing, Security)', 380);
+  await showLoadingStep('Memuat referensi arsitektur, testing, dan keamanan', 380);
 
   // ── Tahap Loading 5 ──
-  await showLoadingStep('Mengintegrasikan filter Anti-Slop & panduan kualitas UI', 380);
+  await showLoadingStep('Menerapkan panduan anti-slop dan kualitas UI', 380);
 
   // ── Tahap Loading 6 ──
-  await showLoadingStep('Membangun master file .krunner', 450);
+  await showLoadingStep('Membuat file utama .krunner', 450);
+
+  if (additionalSkills.length > 0) {
+    await showLoadingStep('Memuat additional-skills terpilih', 350);
+  }
 
   // Compile content with language & scope
-  const content = await buildKrunner(lang, scope);
+  const content = await buildKrunner(lang, scope, additionalSkills);
 
   // Always write master .krunner to targetRoot
   const masterKrunner = path.join(targetRoot, '.krunner');
@@ -574,10 +605,9 @@ async function runInstallation(scope, targetKeys, lang = 'id', projectDir = proc
   const createdFiles = [masterKrunner];
 
   // ── Tahap Loading 7 ──
-  await showLoadingStep(`Memasang adapter untuk ${targetKeys.length} platform AI yang dipilih`, 480);
+  await showLoadingStep(`Memasang adapter untuk ${adapterKeys.length} platform`, 480);
 
-  for (const key of targetKeys) {
-    if (key === 'universal') continue;
+  for (const key of adapterKeys) {
     const adapter = ADAPTERS[key];
     if (adapter) {
       const files = await adapter.install(targetRoot, content, lang, scope);
@@ -587,35 +617,155 @@ async function runInstallation(scope, targetKeys, lang = 'id', projectDir = proc
 
   await sleep(200);
 
-  // ── 6. TAMPILAN SUDAH SELESAI DIINSTAL ─────────────────────────
+  // ── 7. TAMPILAN SUDAH SELESAI DIINSTAL ─────────────────────────
   console.log('');
-  console.log(fmt.bold(fmt.green('  ╔═══════════════════════════════════════════════════════════════╗')));
-  console.log(fmt.bold(fmt.green('  ║                 🎉  SUDAH SELESAI DIINSTAL!                   ║')));
-  console.log(fmt.bold(fmt.green('  ╚═══════════════════════════════════════════════════════════════╝')));
+  printBoxed('INSTALASI SELESAI', (text) => fmt.bold(fmt.green(text)));
   console.log('');
-  console.log(`  ${fmt.bold(fmt.green('✅ Berhasil!'))} Seluruh aturan KRunner telah dipasang.`);
-  console.log(`  ${fmt.dim('Cakupan        :')} ${fmt.cyan(fmt.bold(scopeLabel))}`);
-  console.log(`  ${fmt.dim('Bahasa Agent   :')} ${fmt.cyan(fmt.bold(langLabel))}`);
-  console.log(`  ${fmt.dim('Lokasi Basis   :')} ${fmt.dim(targetRoot)}`);
+  console.log(`  ${fmt.green('[BERHASIL]')} Aturan KRunner siap digunakan.`);
+  console.log(`  ${fmt.dim('Cakupan   :')} ${fmt.cyan(fmt.bold(scopeLabel))}`);
+  console.log(`  ${fmt.dim('Bahasa AI :')} ${fmt.cyan(fmt.bold(langLabel))}`);
+  console.log(`  ${fmt.dim('Folder    :')} ${fmt.dim(targetRoot)}`);
   console.log('');
-  console.log(`  ${fmt.bold('📁 File & Adapter yang Berhasil Dibuat:')}`);
+  console.log(`  ${fmt.bold('File dan adapter yang dibuat:')}`);
   for (const f of createdFiles) {
-    console.log(`     ${fmt.green('→')} ${fmt.cyan(f)}`);
+    console.log(`     ${fmt.green('->')} ${fmt.cyan(f)}`);
   }
   console.log('');
-  console.log(`  ${fmt.bold('💡 Langkah Selanjutnya:')}`);
+  console.log(`  ${fmt.bold('Langkah selanjutnya:')}`);
   if (isGlobal) {
-    console.log(`     ${fmt.dim('1. Aturan KRunner kini aktif secara GLOBAL untuk seluruh project di komputer Anda.')}`);
-    console.log(`     ${fmt.dim('2. Buka project Flutter apa pun di editor/AI Anda, AI akan otomatis membaca aturan ini.')}`);
+    console.log(`     ${fmt.dim('1. KRunner aktif secara global di komputer ini.')}`);
+    console.log(`     ${fmt.dim('2. Buka project Flutter di editor atau tool AI Anda.')}`);
   } else {
-    console.log(`     ${fmt.dim('1. Buka project ini di editor/AI pilihan Anda.')}`);
-    console.log(`     ${fmt.dim('2. AI akan otomatis mendeteksi aturan dan menghasilkan kode Flutter standar KRunner.')}`);
+    console.log(`     ${fmt.dim('1. Buka project ini di editor atau tool AI Anda.')}`);
+    console.log(`     ${fmt.dim('2. Tool AI kini dapat membaca aturan KRunner.')}`);
   }
-  console.log(`     ${fmt.dim('3. Selamat coding!')} 🚀`);
+  console.log(`     ${fmt.dim('3. Mulai coding.')}`);
   console.log('');
 }
 
-// ── Interactive Flow: Welcome -> Bahasa -> Scope -> Skill -> Selesai
+async function selectCheckboxItems(items, {
+  initiallySelected = [],
+  prompt,
+  emptyInputSelection = [],
+  selectionName = 'item',
+} = {}) {
+  const input = process.stdin;
+  const output = process.stdout;
+  const ids = items.map((item) => item.id);
+  const selected = new Set(initiallySelected);
+
+  if (!input.isTTY || !output.isTTY || typeof input.setRawMode !== 'function') {
+    console.log(fmt.dim(prompt));
+    items.forEach((item, index) => {
+      console.log(`  ${index + 1}. ${item.label}`);
+    });
+
+    const rl = createInterface({ input, output });
+    const answer = (await new Promise((resolve) => {
+      rl.question('Pilihan: ', resolve);
+    })).trim();
+    rl.close();
+
+    if (!answer) return emptyInputSelection === 'all' ? ids : [...selected];
+    if (answer.toLowerCase() === 'all') return ids;
+    if (answer.toLowerCase() === 'none') return [];
+
+    const chosen = new Set();
+    for (const token of answer.split(',')) {
+      const index = Number(token.trim()) - 1;
+      if (index < 0 || index >= items.length || !Number.isInteger(index)) {
+        throw new Error(`Pilihan ${selectionName} tidak valid: ${token.trim()}`);
+      }
+      chosen.add(ids[index]);
+    }
+    return ids.filter((id) => chosen.has(id));
+  }
+
+  return new Promise((resolve) => {
+    let activeIndex = 0;
+    let rendered = false;
+    const wasRaw = input.isRaw;
+
+    const draw = () => {
+      const lines = [
+        fmt.dim('UP/DOWN: pindah | SPACE: pilih | A: semua/tidak ada | ENTER: konfirmasi | ESC: lewati'),
+        fmt.dim(prompt),
+        ...items.map((item, index) => {
+          const marker = index === activeIndex ? fmt.cyan('>') : ' ';
+          const checkbox = selected.has(item.id) ? fmt.green('[x]') : fmt.dim('[ ]');
+          return `${marker} ${checkbox} ${item.label}`;
+        }),
+        fmt.dim(`${selected.size} ${selectionName} dipilih`),
+      ];
+
+      if (rendered) output.write(`\x1b[${lines.length}A`);
+      for (const line of lines) output.write(`\r\x1b[2K${line}\n`);
+      rendered = true;
+    };
+
+    const finish = (result) => {
+      input.removeListener('keypress', onKeypress);
+      input.setRawMode(Boolean(wasRaw));
+      input.pause();
+      output.write('\x1b[?25h\n');
+      resolve(result);
+    };
+
+    const onKeypress = (character, key) => {
+      if (key && key.ctrl && key.name === 'c') {
+        finish(null);
+        return;
+      }
+      if (key && key.name === 'escape') {
+        finish(null);
+        return;
+      }
+      if (key && (key.name === 'return' || key.name === 'enter')) {
+        finish([...selected]);
+        return;
+      }
+
+      if (key && key.name === 'up') {
+        activeIndex = (activeIndex - 1 + items.length) % items.length;
+      } else if (key && key.name === 'down') {
+        activeIndex = (activeIndex + 1) % items.length;
+      } else if ((key && key.name === 'space') || character === ' ') {
+        const idToToggle = ids[activeIndex];
+        if (selected.has(idToToggle)) selected.delete(idToToggle);
+        else selected.add(idToToggle);
+      } else if ((character || '').toLowerCase() === 'a') {
+        if (selected.size === items.length) selected.clear();
+        else ids.forEach((id) => selected.add(id));
+      } else {
+        return;
+      }
+
+      draw();
+    };
+
+    emitKeypressEvents(input);
+    input.setRawMode(true);
+    input.resume();
+    input.on('keypress', onKeypress);
+    output.write('\x1b[?25l');
+    draw();
+  });
+}
+
+async function selectAdapters(keys) {
+  const items = keys.map((key) => ({
+    id: key,
+    label: `${ADAPTERS[key].icon} ${ADAPTERS[key].name}`,
+  }));
+  return selectCheckboxItems(items, {
+    initiallySelected: keys,
+    prompt: 'Pilih platform AI. File .krunner selalu dibuat.',
+    emptyInputSelection: 'all',
+    selectionName: 'platform',
+  });
+}
+
+// ── Interactive Flow: Welcome -> Bahasa -> Scope -> Platform -> Additional Skills -> Install
 async function showInteractiveMenu(projectRoot) {
   // 1. WELCOME
   showWelcome();
@@ -624,90 +774,83 @@ async function showInteractiveMenu(projectRoot) {
   const ask = (q) => new Promise((r) => rl.question(q, r));
 
   // 2. PILIH BAHASA PERCAKAPAN
-  console.log(fmt.bold('🌐 Langkah 1/3: Pilih bahasa percakapan untuk Agent AI:'));
-  console.log(`  ${fmt.cyan('1')}. 🇮🇩 ${fmt.bold('Bahasa Indonesia')} ${fmt.dim('(Rekomendasi / Default)')}`);
-  console.log(`  ${fmt.cyan('2')}. 🇬🇧 ${fmt.bold('English')}`);
+  console.log(fmt.bold('LANGKAH 2/7 - Pilih bahasa komunikasi Agent AI'));
+  console.log(`  ${fmt.cyan('1)')} ${fmt.bold('Bahasa Indonesia')} ${fmt.dim('(default)')}`);
+  console.log(`  ${fmt.cyan('2)')} ${fmt.bold('English')}`);
   console.log('');
 
-  const langInput = (await ask('Pilih bahasa [1/2] (default: 1): ')).trim();
+  const langInput = (await ask('Pilihan [1/2] (default: 1): ')).trim();
   const selectedLang = langInput === '2' ? 'en' : 'id';
-  const langLabel = selectedLang === 'en' ? 'English 🇬🇧' : 'Bahasa Indonesia 🇮🇩';
-  console.log(`  ${fmt.green('✓')} Bahasa dipilih: ${fmt.bold(langLabel)}\n`);
+  const langLabel = selectedLang === 'en' ? 'English' : 'Bahasa Indonesia';
+  console.log(`  ${fmt.green('[OK]')} Bahasa: ${fmt.bold(langLabel)}\n`);
 
   // 3. PILIH CAKUPAN PENGINSTALAN (SCOPE)
-  console.log(fmt.bold('📍 Langkah 2/3: Pilih cakupan penginstalan KRunner:'));
-  console.log(`  ${fmt.cyan('1')}. 📁 ${fmt.bold('Only this project')} ${fmt.dim(`— Hanya aktif di project ini (${path.basename(projectRoot)})`)}`);
-  console.log(`  ${fmt.cyan('2')}. 🌍 ${fmt.bold('Everywhere / Global')} ${fmt.dim('— Aktif untuk SEMUA project di komputer ini (~/)')}`);
+  console.log(fmt.bold('LANGKAH 3/7 - Pilih cakupan instalasi KRunner'));
+  console.log(`  ${fmt.cyan('1)')} ${fmt.bold('Project ini')} ${fmt.dim(`- Aktif hanya di folder ini (${path.basename(projectRoot)})`)}`);
+  console.log(`  ${fmt.cyan('2)')} ${fmt.bold('Global')} ${fmt.dim('- Aktif untuk semua project di komputer ini (~/)')}`);
   console.log('');
 
-  const scopeInput = (await ask('Pilih cakupan [1/2] (default: 1): ')).trim();
+  const scopeInput = (await ask('Pilihan [1/2] (default: 1): ')).trim();
   const selectedScope = scopeInput === '2' ? 'global' : 'project';
-  const scopeLabel = selectedScope === 'global' ? 'Everywhere / Global (~/)' : 'Only this project (./)';
-  console.log(`  ${fmt.green('✓')} Cakupan dipilih: ${fmt.bold(scopeLabel)}\n`);
-
-  // 4. PILIH SKILL / PLATFORM AI
-  console.log(fmt.bold('⚙️  Langkah 3/3: Silakan pilih skill AI mana yang mau di-install:\n'));
-  console.log(`  ${fmt.cyan('1')}. 🌐 ${fmt.bold('All-in-One')} ${fmt.dim('— (Pasang untuk SEMUA Platform AI)')}`);
-
-  const keys = Object.keys(ADAPTERS);
-  keys.forEach((k, idx) => {
-    const item = ADAPTERS[k];
-    console.log(`  ${fmt.cyan(String(idx + 2))}. ${item.icon} ${item.name}`);
-  });
-  console.log('');
-
-  const answer = (await ask('Pilih nomor skill (default: 1 untuk SEMUA platform): ')).trim();
+  const scopeLabel = selectedScope === 'global' ? 'Global (~/)' : 'Project ini (./)';
+  console.log(`  ${fmt.green('[OK]')} Cakupan: ${fmt.bold(scopeLabel)}\n`);
   rl.close();
 
-  let chosen = [];
-  if (!answer || answer === '1') {
-    chosen = keys;
+  if (selectedScope === 'project' && path.resolve(projectRoot) === path.resolve(REPO_ROOT)) {
+    console.error(fmt.red('  [ERROR] Pilih cakupan Global atau jalankan KRunner dari folder project target.'));
+    return;
+  }
+
+  // 4. PILIH PLATFORM AI
+  console.log(fmt.bold('LANGKAH 4/7 - Pilih platform AI yang ingin dipasang'));
+  console.log('');
+  const keys = Object.keys(ADAPTERS).filter((key) => key !== 'universal');
+  const chosen = await selectAdapters(keys);
+  if (chosen === null) {
+    console.log(fmt.yellow('  [DIBATALKAN] Pemilihan dihentikan.'));
+    return;
+  }
+
+  // 5. PILIH ADDITIONAL SKILLS
+  const availableSkills = await listAdditionalSkills();
+  let chosenAdditionalSkills = [];
+  if (availableSkills.length === 0) {
+    console.log(fmt.dim('LANGKAH 5/7 - Tidak ada additional-skill yang tersedia; langkah ini dilewati.'));
   } else {
-    for (const tok of answer.split(',')) {
-      const n = parseInt(tok.trim(), 10);
-      if (n === 1) { chosen = keys; break; }
-      const idx = n - 2;
-      if (idx >= 0 && idx < keys.length) chosen.push(keys[idx]);
+    console.log(fmt.bold('LANGKAH 5/7 - Pilih additional-skill yang ingin disertakan'));
+    console.log('');
+    const selectedIds = await selectCheckboxItems(
+      availableSkills.map(({ id, label }) => ({ id, label })),
+      {
+        prompt: 'Pilih skill tambahan; Enter tanpa pilihan untuk melewati.',
+        selectionName: 'additional-skill',
+      },
+    );
+    chosenAdditionalSkills = availableSkills.filter((skill) => selectedIds?.includes(skill.id));
+    if (chosenAdditionalSkills.length === 0) {
+      console.log(fmt.dim('  Tidak ada additional-skill dipilih; langkah ini dilewati.'));
     }
   }
 
-  if (!chosen.length) {
-    console.log(fmt.yellow('  Pilihan tidak dikenali. Memasang All-in-One secara default...\n'));
-    chosen = keys;
-  }
-
-  // 5 & 6. LOADING & SELESAI
-  await runInstallation(selectedScope, chosen, selectedLang, projectRoot);
+  // 6 & 7. LOADING & SELESAI
+  await runInstallation(selectedScope, chosen, selectedLang, projectRoot, chosenAdditionalSkills);
 }
 
 // ── Main Entrypoint ─────────────────────────────────────────────
 async function main() {
   const args = process.argv.slice(2);
 
-  // Extract flags
-  let explicitLang = 'id';
-  const langArg = args.find((a) => a.startsWith('--lang='));
-  if (langArg) {
-    const val = langArg.split('=')[1]?.toLowerCase();
-    if (val === 'en' || val === 'english') explicitLang = 'en';
-  }
-
-  let explicitScope = 'project';
-  if (args.includes('--global') || args.includes('-g') || args.includes('global') || args.includes('everywhere')) {
-    explicitScope = 'global';
-  }
-
   if (args.includes('--help') || args.includes('-h')) {
     showWelcome();
-    console.log(`${fmt.bold('Penggunaan:')}
-  ${fmt.cyan('npx krunner')}                    Runtutan interaktif:
-                                   Welcome ➔ Pilih Bahasa ➔ Pilih Cakupan (Project/Global) ➔ Pilih Skill ➔ Selesai
+    console.log(`${fmt.bold('PENGGUNAAN')}
+  krunner                 Jalankan wizard instalasi interaktif
 
-  ${fmt.cyan('npx krunner all')}                Pasang untuk SEMUA platform di project ini
-  ${fmt.cyan('npx krunner all --global')}       Pasang untuk SEMUA platform secara GLOBAL (Everywhere)
-  ${fmt.cyan('npx krunner all --lang=en')}      Pasang SEMUA platform dengan bahasa English
-  ${fmt.cyan('npx krunner install <target>')}    Pasang untuk platform tertentu (cursor, claude, ollama, dll.)
-  ${fmt.cyan('npx krunner --version')}          Tampilkan versi
+  Urutan:
+    Welcome -> Bahasa -> Cakupan -> Platform AI -> Additional Skills -> Loading -> Selesai
+
+  Opsi bantuan:
+    --help, -h             Tampilkan bantuan
+    --version, -v          Tampilkan versi
 `);
     return;
   }
@@ -718,56 +861,10 @@ async function main() {
   }
 
   const projectRoot = process.cwd();
-
-  // Guard: jangan jalankan di dalam repo krunner sendiri jika scope = project
-  if (explicitScope === 'project' && path.resolve(projectRoot) === path.resolve(REPO_ROOT)) {
-    console.log('');
-    console.log(fmt.red('  ✗ Anda sedang berada di dalam repo krunner.'));
-    console.log('    Pindah ke folder project target Anda terlebih dahulu:');
-    console.log(fmt.dim('    cd ~/my-flutter-project'));
-    console.log(fmt.dim('    npx krunner'));
-    console.log('');
-    console.log('    Atau pasang secara global ke seluruh komputer:');
-    console.log(fmt.dim('    npx krunner all --global'));
-    console.log('');
-    process.exit(1);
+  if (args.length > 0) {
+    throw new Error('Gunakan perintah krunner tanpa subcommand atau opsi instalasi.');
   }
 
-  const allKeys = Object.keys(ADAPTERS);
-
-  // Subcommand: all
-  if (args[0] === 'all' || args.includes('--all')) {
-    showWelcome();
-    await runInstallation(explicitScope, allKeys, explicitLang, projectRoot);
-    return;
-  }
-
-  // Subcommand: install <target>
-  if (args[0] === 'install') {
-    showWelcome();
-    const target = args[1]?.toLowerCase();
-    if (!target || target === 'all') {
-      await runInstallation(explicitScope, allKeys, explicitLang, projectRoot);
-    } else if (ADAPTERS[target]) {
-      await runInstallation(explicitScope, [target], explicitLang, projectRoot);
-    } else {
-      console.error(fmt.red(`\n  Target tidak dikenal: ${target}`));
-      console.log(`  Target yang tersedia: ${allKeys.join(', ')}, all\n`);
-      process.exit(1);
-    }
-    return;
-  }
-
-  // Jika dipanggil nama adapter langsung (misal: npx krunner cursor)
-  const direct = args[0]?.toLowerCase().replace(/^--/, '');
-  if (direct && ADAPTERS[direct]) {
-    showWelcome();
-    await runInstallation(explicitScope, [direct], explicitLang, projectRoot);
-    return;
-  }
-
-  // Tanpa argumen -> Runtutan Interaktif Penuh:
-  // Welcome -> Bahasa -> Scope (Project / Everywhere) -> Skill -> Selesai
   await showInteractiveMenu(projectRoot);
 }
 

@@ -12,5 +12,8 @@ Hindari boilerplate berlebihan, penamaan generik, komentar generik, abstraksi pr
 - Jangan lakukan Extract Widget otomatis; perubahan itu harus dilakukan manual oleh pemilik modul.
 - Jangan menambah folder di luar struktur wajib tanpa persetujuan.
 - Jangan mengklaim test, security, performa, atau kesiapan production tanpa bukti yang sesuai.
+- Jangan mengarang file, class, method, package, API, path, versi, atau konfigurasi. Jika konteks penting belum ada, tanyakan atau nyatakan asumsi secara eksplisit.
+- Untuk perubahan parsial, jangan menulis ulang seluruh file atau menyertakan ulang kode yang tidak berubah.
+- Berhenti dan minta konfirmasi jika file target tidak ditemukan, konteks ambigu, atau perubahan akan menyentuh kode yang dimodifikasi manual.
 
-Pahami batas tugas; jangan mengubah kode yang telah dimodifikasi manual tanpa konfirmasi. Laporkan trade-off yang relevan saja.
+Pahami batas tugas; jangan mengubah kode yang telah dimodifikasi manual tanpa konfirmasi. Jawab langsung dan ringkas tanpa preamble atau opsi yang tidak diminta. Jika ada beberapa pendekatan, pilih yang paling sederhana dan sebutkan alasannya dalam satu baris; laporkan trade-off yang relevan saja.

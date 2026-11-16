@@ -10,7 +10,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Baca aturan ini sebelum menulis kode.
 - Tentukan dulu konteks: tugas atau enterprise.
 - Tulis kode sesuai aturan.
-- Audit sendiri: format, analyze, test, keamanan, struktur.
+- Audit sendiri: format, analyze, test nanti secara manual, keamanan, struktur.
 - Laporkan perubahan dan hal yang belum selesai.
 - Jangan menyentuh kode yang sudah diubah manual tanpa konfirmasi.
 
@@ -63,7 +63,7 @@ ATURAN AI CODING PADA PROJECT INI :
 8. KUALITAS KODE
 - Clean code dan code formatting (dart format, dart analyze tanpa warning).
 - Refactoring berkala, hindari duplikasi.
-- Minim bug; setiap bug yang ditemukan wajib ditambah test regresi.
+- Minim bug; setiap bug yang ditemukan wajib ditambah test regresi tetapi jangan di jalankan.
 - Komentar dilarang untuk hal obvious; wajib untuk alasan bisnis dan API publik.
 - Rapikan kode serapih mungkin dan tidak terlihat seperti codingan AI.
 
@@ -107,6 +107,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Contract test untuk API (sesuai kontrak backend).
 - Coverage gate di CI: minimal 70-80% untuk modul inti.
 - Test harus deterministik, tidak bergantung waktu/jaringan nyata.
+- Test dijalankan secara manual oleh saya
 
 13. ERROR HANDLING DAN RESILIENCE
 - Semua operasi async wajib try/catch dan mapping error ke state jelas.
@@ -205,4 +206,15 @@ ATURAN AI CODING PADA PROJECT INI :
 - Jika ada keraguan apakah perubahan memengaruhi visual, anggap memengaruhi visual dan jangan dilakukan.
 - Laporkan daftar perubahan dan pastikan tidak ada perubahan visual.
 
+24. EFISIENSI DAN ANTI-HALUSINASI
+- AI dilarang berhalusinasi: jangan mengarang file, fungsi, class, package, API, path, atau konfigurasi yang tidak ada.
+- Jika informasi kurang (file, konteks, versi, struktur), AI wajib bertanya singkat atau menyatakan asumsi secara eksplisit — bukan menebak lalu menulis kode.
+- Jangan menulis ulang seluruh file jika perubahan hanya sebagian; tampilkan hanya bagian yang berubah (diff/patch) kecuali diminta sebaliknya.
+- Jangan menyalin ulang kode yang tidak berubah, jangan mengulang penjelasan, jangan memberi contoh berlebihan.
+- Jawaban harus langsung ke kebutuhan: tanpa preamble, tanpa ringkasan panjang, tanpa opsi yang tidak diminta.
+- Prioritaskan perubahan minimal yang menyelesaikan tugas; hindari refactoring di luar permintaan.
+- Jika ada beberapa pendekatan, pilih satu yang paling sederhana dan sebutkan alasannya dalam satu baris — bukan membandingkan semua opsi.
+- Berhenti dan minta konfirmasi jika: file target tidak ditemukan, konteks ambigu, atau perubahan berpotensi menyentuh kode yang diubah manual.
+- Hemat token: gunakan bahasa ringkas, hindari tabel/daftar panjang jika satu kalimat cukup, dan jangan mengulang isi aturan proyek di setiap jawaban.
+- Laporkan hasil secara singkat: file yang diubah, ringkasan perubahan, dan hal yang belum selesai — tanpa narasi tambahan.
 
