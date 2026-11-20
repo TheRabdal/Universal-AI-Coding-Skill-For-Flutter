@@ -7,7 +7,7 @@
 - AI tidak menjalankan project; AI hanya menganalisis dan mengubah kode.
 
 ## 2. CARA KERJA AI
-- Baca aturan ini sebelum menulis kode.
+- Baca aturan ini (file `CODING_RULES_byTheRabdal.md` di root project) sebelum menulis kode.
 - Tentukan dulu konteks: tugas atau enterprise.
 - Tulis kode sesuai aturan.
 - Audit sendiri: format, analyze, test nanti secara manual, keamanan, struktur.
