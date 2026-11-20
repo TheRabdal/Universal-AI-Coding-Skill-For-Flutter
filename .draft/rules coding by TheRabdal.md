@@ -1,12 +1,12 @@
-ATURAN AI CODING PADA PROJECT INI :
+# ATURAN AI CODING PADA PROJECT INI
 
-1. PRINSIP DASAR
+## 1. PRINSIP DASAR
 - Kode harus sederhana, mudah dibaca, dan mudah dirawat.
 - Utamakan kejelasan dibanding kode yang terlihat pintar.
 - Antislop AI aktif saat pengerjaan: hindari boilerplate berlebihan, penamaan generik, dan komentar generik.
 - AI tidak menjalankan project; AI hanya menganalisis dan mengubah kode.
 
-2. CARA KERJA AI
+## 2. CARA KERJA AI
 - Baca aturan ini sebelum menulis kode.
 - Tentukan dulu konteks: tugas atau enterprise.
 - Tulis kode sesuai aturan.
@@ -14,7 +14,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Laporkan perubahan dan hal yang belum selesai.
 - Jangan menyentuh kode yang sudah diubah manual tanpa konfirmasi.
 
-3. STATE MANAGEMENT
+## 3. STATE MANAGEMENT
 - Semua widget wajib Stateless, tanpa pengecualian, baik tugas maupun enterprise.
 - Stateful dilarang sepenuhnya.
 - setState() dilarang sepenuhnya.
@@ -28,7 +28,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - State private, akses lewat getter, perubahan lewat notifyListeners() (Provider) atau emit (BLoC).
 - Jangan taruh logic UI (navigasi, SnackBar, dialog) dan BuildContext di Provider/BLoC.
 
-4. ANIMASI
+## 4. ANIMASI
 - Prioritaskan animasi implisit: AnimatedContainer, AnimatedOpacity, AnimatedSwitcher, AnimatedCrossFade.
 - Jika butuh AnimationController, jangan buat di widget; tempatkan di Provider/BLoC.
 - TickerProvider disediakan lewat vsync_provider atau mekanisme serupa.
@@ -36,7 +36,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Package animasi pihak ketiga hanya boleh dipakai jika lolos evaluasi keamanan dan pemeliharaan.
 - Animasi tidak boleh memicu rebuild berlebihan.
 
-5. ARSITEKTUR BERLAPIS
+## 5. ARSITEKTUR BERLAPIS
 - Pisahkan layer: presentation, domain, data.
 - Presentation: screen/pages, widgets, state (Provider/BLoC).
 - Domain: model, entity, usecase, interface repository.
@@ -45,14 +45,14 @@ ATURAN AI CODING PADA PROJECT INI :
 - Jangan akses datasource langsung dari UI atau state.
 - Setiap layer hanya bergantung pada layer di bawahnya lewat interface.
 
-6. DEPENDENCY INJECTION DAN MODULARISASI
+## 6. DEPENDENCY INJECTION DAN MODULARISASI
 - Gunakan get_it untuk service, repository, dan usecase.
 - Setiap fitur adalah modul mandiri dengan batas jelas.
 - Komunikasi antar modul lewat interface, bukan import langsung implementasi.
 - Daftarkan dependensi di satu tempat (service locator), bukan tersebar.
 - Interface repository wajib ada; implementasi boleh diganti tanpa mengubah domain.
 
-7. UI DAN LAYOUT
+## 7. UI DAN LAYOUT
 - Gunakan Container dibanding Expanded; jika perlu Expanded, pastikan tidak menimbulkan masalah.
 - Pakai const jika valid; hilangkan hanya jika tidak diperlukan.
 - Layout harus scalable untuk web dan mobile.
@@ -60,14 +60,14 @@ ATURAN AI CODING PADA PROJECT INI :
 - Wajib aksesibilitas: semantics, ukuran tap minimum, kontras warna.
 - Wajib internasionalisasi (intl) sejak awal.
 
-8. KUALITAS KODE
+## 8. KUALITAS KODE
 - Clean code dan code formatting (dart format, dart analyze tanpa warning).
 - Refactoring berkala, hindari duplikasi.
 - Minim bug; setiap bug yang ditemukan wajib ditambah test regresi tetapi jangan di jalankan.
 - Komentar dilarang untuk hal obvious; wajib untuk alasan bisnis dan API publik.
 - Rapikan kode serapih mungkin dan tidak terlihat seperti codingan AI.
 
-9. PROVIDER
+## 9. PROVIDER
 - Satu class Provider untuk satu domain state, wajib extends ChangeNotifier.
 - File di folder provider, penamaan snake_case, class PascalCase.
 - State private, akses lewat getter, perubahan lewat notifyListeners().
@@ -81,7 +81,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Jangan simpan data sensitif di state Provider tanpa pengamanan.
 - Setiap Provider wajib punya unit test untuk method utama.
 
-10. BLOCBUILDER, BLOCLISTENER, BLOCCONSUMER
+## 10. BLOCBUILDER, BLOCLISTENER, BLOCCONSUMER
 - BlocBuilder untuk menampilkan UI berdasarkan state; gunakan buildWhen jika perlu.
 - BlocListener untuk aksi sekali jalan (navigasi, SnackBar, dialog); gunakan listenWhen jika perlu.
 - BlocConsumer untuk keduanya; builder untuk UI, listener untuk aksi sekali.
@@ -91,7 +91,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Selalu sediakan tampilan loading, success, error, dan empty di BlocBuilder.
 - Test BlocBuilder, BlocListener, dan BlocConsumer sesuai perilakunya.
 
-11. FLOATING LOGGER
+## 11. FLOATING LOGGER
 - Floating logger hanya aktif di debug dan staging; wajib nonaktif di production.
 - Daftarkan di atas MaterialApp, satu instance saja, jangan di dalam widget yang di-rebuild.
 - Log request API, state penting, dan error dengan level yang jelas.
@@ -99,7 +99,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Jangan jadikan floating logger pengganti crash reporting.
 - Test memastikan floating logger nonaktif di production dan tidak mengandung data sensitif.
 
-12. TESTING BERLAPIS
+## 12. TESTING BERLAPIS
 - Unit test wajib untuk Provider, BLoC, usecase, repository, dan datasource.
 - Widget test wajib untuk layar kritis.
 - Integration test wajib untuk alur utama end-to-end.
@@ -109,7 +109,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Test harus deterministik, tidak bergantung waktu/jaringan nyata.
 - Test dijalankan secara manual oleh saya
 
-13. ERROR HANDLING DAN RESILIENCE
+## 13. ERROR HANDLING DAN RESILIENCE
 - Semua operasi async wajib try/catch dan mapping error ke state jelas.
 - Wajib timeout untuk operasi jaringan.
 - Wajib retry dengan backoff untuk operasi yang aman diulang.
@@ -117,7 +117,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Wajib offline mode dan fallback UI.
 - Jangan biarkan exception bocor ke UI tanpa penanganan.
 
-14. OBSERVABILITY
+## 14. OBSERVABILITY
 - Wajib structured logging (level, konteks, tanpa data sensitif).
 - Wajib crash reporting (Sentry/Firebase Crashlytics).
 - Wajib analytics untuk fitur utama sesuai kebijakan privasi.
@@ -125,7 +125,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Wajib alerting untuk error rate dan performa.
 - Floating logger hanya untuk debug, bukan pengganti observability.
 
-15. KEAMANAN
+## 15. KEAMANAN
 - Jangan hardcode secret, API key, atau token di kode.
 - Secret disimpan di secret manager/CI secret, bukan di repo.
 - Simpan token di penyimpanan aman (flutter_secure_storage), bukan SharedPreferences biasa.
@@ -138,20 +138,20 @@ ATURAN AI CODING PADA PROJECT INI :
 - Threat model untuk fitur baru yang menyentuh data sensitif.
 - Security audit wajib sebelum rilis.
 
-16. PRIVASI DAN COMPLIANCE
+## 16. PRIVASI DAN COMPLIANCE
 - Klasifikasikan data: publik, internal, sensitif.
 - Data pribadi hanya dikumpulkan jika perlu, dengan dasar yang jelas.
 - Retensi log dan analytics dibatasi sesuai kebijakan.
 - Analytics harus opt-in jika diwajibkan regulasi.
 - Jangan kirim data pribadi ke layanan pihak ketiga tanpa persetujuan.
 
-17. PERFORMANCE BUDGET
+## 17. PERFORMANCE BUDGET
 - Tetapkan batas ukuran build, waktu startup, dan penggunaan memori.
 - Hindari rebuild berlebihan (buildWhen, listenWhen, const).
 - Hindari operasi berat di main thread.
 - Ukur performa sebelum dan sesudah perubahan besar.
 
-18. CI/CD DAN QUALITY GATE
+## 18. CI/CD DAN QUALITY GATE
 - Build dan run hanya lewat pipeline, bukan lokal oleh AI.
 - Pipeline wajib: dart format, dart analyze, unit/widget/integration test, coverage gate.
 - Build otomatis untuk dev, staging, production.
@@ -159,20 +159,20 @@ ATURAN AI CODING PADA PROJECT INI :
 - Changelog wajib untuk setiap rilis.
 - Rollback plan wajib ada untuk setiap rilis.
 
-19. DOKUMENTASI DAN ADR
+## 19. DOKUMENTASI DAN ADR
 - Setiap keputusan arsitektur dicatat di ADR.
 - API internal didokumentasikan.
 - README per modul menjelaskan tujuan dan cara pakai.
 - Dokumentasi diperbarui bersamaan dengan perubahan kode.
 
-20. KOLABORASI DAN PROSES
+## 20. KOLABORASI DAN PROSES
 - Code review wajib sebelum merge.
 - Branch strategy: feature, develop, main.
 - Setiap modul punya owner yang bertanggung jawab.
 - Definition of Done: kode, test, dokumentasi, review, lulus pipeline.
 - Jangan tinggalkan TODO tanpa tiket.
 
-21. LARANGAN
+## 21. LARANGAN
 - Jangan pakai Stateful dalam kondisi apa pun.
 - Jangan pakai setState() dalam kondisi apa pun.
 - Jangan menaruh lifecycle logic di widget; pindahkan ke Provider/BLoC.
@@ -189,13 +189,13 @@ ATURAN AI CODING PADA PROJECT INI :
 - Jangan tinggalkan TODO tanpa tiket.
 - Jangan menambah folder di luar struktur wajib tanpa persetujuan.
 
-22. RINGKASAN KEPUTUSAN FINAL
+## 22. RINGKASAN KEPUTUSAN FINAL
 - Stateful dan setState() dilarang total.
 - Animasi pakai implisit dulu; jika butuh controller, taruh di Provider/BLoC dengan TickerProvider.
 - State hanya Provider (tugas) atau BLoC (enterprise).
 - Keamanan, testing, CI/CD, observability masuk aturan enterprise.
 
-23. ATURAN PERUBAHAN VISUAL
+## 23. ATURAN PERUBAHAN VISUAL
 - Jika diminta merapikan codingan tanpa mengubah tampilan visual, dilarang mengubah hasil render UI.
 - Dilarang mengubah ukuran, warna, padding, margin, radius, font, ikon, posisi, dan urutan widget.
 - Dilarang mengganti jenis widget yang memengaruhi tampilan (misal Container ke SizedBox) kecuali hasil visual identik.
@@ -206,7 +206,7 @@ ATURAN AI CODING PADA PROJECT INI :
 - Jika ada keraguan apakah perubahan memengaruhi visual, anggap memengaruhi visual dan jangan dilakukan.
 - Laporkan daftar perubahan dan pastikan tidak ada perubahan visual.
 
-24. EFISIENSI DAN ANTI-HALUSINASI
+## 24. EFISIENSI DAN ANTI-HALUSINASI
 - AI dilarang berhalusinasi: jangan mengarang file, fungsi, class, package, API, path, atau konfigurasi yang tidak ada.
 - Jika informasi kurang (file, konteks, versi, struktur), AI wajib bertanya singkat atau menyatakan asumsi secara eksplisit — bukan menebak lalu menulis kode.
 - Jangan menulis ulang seluruh file jika perubahan hanya sebagian; tampilkan hanya bagian yang berubah (diff/patch) kecuali diminta sebaliknya.
@@ -217,4 +217,3 @@ ATURAN AI CODING PADA PROJECT INI :
 - Berhenti dan minta konfirmasi jika: file target tidak ditemukan, konteks ambigu, atau perubahan berpotensi menyentuh kode yang diubah manual.
 - Hemat token: gunakan bahasa ringkas, hindari tabel/daftar panjang jika satu kalimat cukup, dan jangan mengulang isi aturan proyek di setiap jawaban.
 - Laporkan hasil secara singkat: file yang diubah, ringkasan perubahan, dan hal yang belum selesai — tanpa narasi tambahan.
-
