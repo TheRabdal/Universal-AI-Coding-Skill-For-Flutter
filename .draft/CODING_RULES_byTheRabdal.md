@@ -2,6 +2,7 @@
 
 ## 1. PRINSIP DASAR
 - Tanyakan terlebih dahulu untuk bahasa percakapan ingin menggunakan bahasa indonesia atau bahasa inggris.
+- Jangan ada komentar didalam programnya.
 - Kode harus sederhana, mudah dibaca, dan mudah dirawat.
 - Utamakan kejelasan dibanding kode yang terlihat pintar.
 - Antislop AI aktif saat pengerjaan: hindari boilerplate berlebihan, penamaan generik, dan komentar generik.
