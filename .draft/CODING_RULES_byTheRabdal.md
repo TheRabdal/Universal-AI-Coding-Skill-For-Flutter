@@ -1,6 +1,7 @@
 # ATURAN AI CODING PADA PROJECT INI
 
 ## 1. PRINSIP DASAR
+- Tanyakan terlebih dahulu untuk bahasa percakapan ingin menggunakan bahasa indonesia atau bahasa inggris.
 - Kode harus sederhana, mudah dibaca, dan mudah dirawat.
 - Utamakan kejelasan dibanding kode yang terlihat pintar.
 - Antislop AI aktif saat pengerjaan: hindari boilerplate berlebihan, penamaan generik, dan komentar generik.
