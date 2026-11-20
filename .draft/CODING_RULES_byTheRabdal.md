@@ -219,3 +219,11 @@
 - Berhenti dan minta konfirmasi jika: file target tidak ditemukan, konteks ambigu, atau perubahan berpotensi menyentuh kode yang diubah manual.
 - Hemat token: gunakan bahasa ringkas, hindari tabel/daftar panjang jika satu kalimat cukup, dan jangan mengulang isi aturan proyek di setiap jawaban.
 - Laporkan hasil secara singkat: file yang diubah, ringkasan perubahan, dan hal yang belum selesai — tanpa narasi tambahan.
+
+
+
+
+
+
+
+
